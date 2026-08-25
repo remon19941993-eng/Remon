@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة التحكم</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,sans-serif}
+body{background:#0f172a;color:#fff;min-height:100vh}
+.login-screen{position:fixed;inset:0;background:#0f172a;display:flex;align-items:center;justify-content:center;z-index:100}
+.login-box{background:#1e293b;padding:2rem;border-radius:1rem;width:90%;max-width:400px;border:1px solid #334155}
+.login-box h2{text-align:center;margin-bottom:1.5rem;color:#6366f1}
+.login-box input{width:100%;padding:0.75rem;margin-bottom:1rem;background:#0f172a;border:1px solid #334155;border-radius:0.5rem;color:#fff}
+.login-box button{width:100%;padding:0.75rem;background:#6366f1;border:none;border-radius:0.5rem;color:#fff;font-size:1rem;cursor:pointer}
+.login-box .error{color:#ef4444;text-align:center;margin-top:0.5rem;display:none}
+.sidebar{position:fixed;right:0;top:0;width:250px;height:100vh;background:#1e293b;border-left:1px solid #334155;padding:1.5rem}
+.sidebar h3{color:#6366f1;margin-bottom:1.5rem}
+.sidebar a{display:block;padding:0.75rem;color:#94a3b8;text-decoration:none;border-radius:0.5rem;margin-bottom:0.25rem}
+.sidebar a:hover,.sidebar a.active{background:rgba(99,102,241,0.2);color:#fff;border-right:3px solid #6366f1}
+.main{margin-right:250px;padding:2rem}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;padding-bottom:1rem;border-bottom:1px solid #334155}
+.card{background:#1e293b;padding:1.5rem;border-radius:0.75rem;border:1px solid #334155;margin-bottom:1rem}
+.card h4{color:#94a3b8;font-size:0.875rem;margin-bottom:0.5rem}
+.card .num{font-size:2rem;font-weight:bold;color:#6366f1}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem}
+table{width:100%;border-collapse:collapse}
+th,td{padding:0.75rem;text-align:right;border-bottom:1px solid #334155}
+th{color:#94a3b8;font-size:0.875rem}
+.btn{background:#6366f1;color:#fff;padding:0.5rem 1rem;border:none;border-radius:0.5rem;cursor:pointer}
+.btn-red{background:#ef4444}
+input,textarea,select{width:100%;padding:0.75rem;background:#0f172a;border:1px solid #334155;border-radius:0.5rem;color:#fff;margin-bottom:1rem}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.8);display:none;align-items:center;justify-content:center;z-index:50}
+.modal.show{display:flex}
+.modal-box{background:#1e293b;padding:2rem;border-radius:1rem;width:90%;max-width:500px;border:1px solid #334155;max-height:90vh;overflow-y:auto}
+.hidden{display:none}
+.section{display:none}
+.section.active{display:block}
+.status-green{color:#22c55e}
+.status-yellow{color:#eab308}
+</style>
+</head>
+<body>
+
+<div class="login-screen" id="loginScreen">
+<div class="login-box">
+<h2>🔐 لوحة التحكم</h2>
+<form id="loginForm">
+<input type="password" id="pass" placeholder="كلمة المرور" required>
+<button type="submit">دخول</button>
+<p class="error" id="err">كلمة المرور غير صحيحة!</p>
+</form>
+</div>
+</div>
+
+<div id="app" class="hidden">
+<div class="sidebar">
+<h3>⚡ متجري</h3>
+<a href="#" class="active" onclick="show('dash')">📊 الرئيسية</a>
+<a href="#" onclick="show('prod')">📦 المنتجات</a>
+<a href="#" onclick="show('ord')">🛒 الطلبات</a>
+<a href="#" onclick="show('set')">⚙️ الإعدادات</a>
+<a href="#" onclick="logout()" style="margin-top:2rem">🚪 خروج</a>
+</div>
+
+<div class="main">
+<div class="header">
+<h2 id="title">الرئيسية</h2>
+<span id="date"></span>
+</div>
+
+<div id="dash" class="section active">
+<div class="grid">
+<div class="card"><h4>المنتجات</h4><div class="num" id="c1">0</div></div>
+<div class="card"><h4>الطلبات</h4><div class="num" id="c2">0</div></div>
+<div class="card"><h4>المبيعات</h4><div class="num" id="c3">0 ر.س</div></div>
+</div>
+</div>
+
+<div id="prod" class="section">
+<button class="btn" onclick="openProd()">+ منتج جديد</button>
+<div class="card" style="margin-top:1rem;overflow-x:auto">
+<table id="prodTable"><thead><tr><th>المنتج</th><th>السعر</th><th>المخزون</th><th>إجراء</th></tr></thead><tbody></tbody></table>
+<p id="noProd" style="text-align:center;padding:2rem;color:#64748b">لا توجد منتجات</p>
+</div>
+</div>
+
+<div id="ord" class="section">
+<div class="card" style="overflow-x:auto">
+<table id="ordTable"><thead><tr><th>الطلب</th><th>العميل</th><th>المجموع</th><th>الحالة</th></tr></thead><tbody></tbody></table>
+<p id="noOrd" style="text-align:center;padding:2rem;color:#64748b">لا توجد طلبات</p>
+</div>
+</div>
+
+<div id="set" class="section">
+<div class="card">
+<h4 style="margin-bottom:1rem">إعدادات المتجر</h4>
+<input type="text" id="sName" placeholder="اسم المتجر">
+<select id="sCur"><option value="ر.س">ريال سعودي</option><option value="د.إ">درهم إماراتي</option><option value="$">دولار</option></select>
+<button class="btn" onclick="saveSet()">💾 حفظ</button>
+</div>
+<div class="card" style="margin-top:1rem">
+<h4 style="color:#ef4444;margin-bottom:1rem">⚠️ منطقة الخطر</h4>
+<button class="btn btn-red" onclick="clearAll()">🗑️ مسح جميع البيانات</button>
+</div>
+</div>
+
+</div>
+</div>
+
+<div class="modal" id="pModal">
+<div class="modal-box">
+<h3 style="margin-bottom:1rem" id="mTitle">إضافة منتج</h3>
+<form id="pForm">
+<input type="hidden" id="pid">
+<input type="text" id="pname" placeholder="اسم المنتج *" required>
+<input type="number" id="pprice" placeholder="السعر *" required min="0" step="0.01">
+<input type="number" id="pstock" placeholder="المخزون" min="0" value="1">
+<input type="url" id="pimg" placeholder="رابط الصورة">
+<textarea id="pdesc" rows="3" placeholder="الوصف"></textarea>
+<label><input type="checkbox" id="pact" checked> متاح</label>
+<div style="display:flex;gap:0.5rem;margin-top:1rem">
+<button type="submit" class="btn" style="flex:1">حفظ</button>
+<button type="button" class="btn" style="flex:1;background:#334155" onclick="closeProd()">إلغاء</button>
+</div>
+</form>
+</div>
+</div>
+
+<script>
+const CFG={pass:"admin123",cur:"ر.س",name:"متجري"};
+const DB={get:k=>JSON.parse(localStorage.getItem(k)||'[]'),set:(k,v)=>localStorage.setItem(k,JSON.stringify(v))};
+
+if(sessionStorage.getItem('ad')==='1')showApp();
+document.getElementById('loginForm').onsubmit=e=>{e.preventDefault();if(document.getElementById('pass').value===CFG.pass){sessionStorage.setItem('ad','1');showApp()}else{document.getElementById('err').style.display='block'}};
+function showApp(){document.getElementById('loginScreen').style.display='none';document.getElementById('app').classList.remove('hidden');init()};
+function logout(){sessionStorage.removeItem('ad');location.reload()};
+
+function show(id){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.sidebar a').forEach(a=>a.classList.remove('active'));event.target.classList.add('active');document.getElementById('title').textContent={dash:'الرئيسية',prod:'المنتجات',ord:'الطلبات',set:'الإعدادات'}[id];if(id==='prod')loadP();if(id==='ord')loadO();if(id==='dash')dash();if(id==='set')loadS()};
+
+function dash(){let p=DB.get('ap'),o=DB.get('ao');document.getElementById('c1').textContent=p.length;document.getElementById('c2').textContent=o.length;document.getElementById('c3').textContent=o.reduce((s,x)=>s+(x.t||0),0)+' '+(DB.get('as').cur||CFG.cur)};
+
+function loadP(){let p=DB.get('ap'),t=document.querySelector('#prodTable tbody'),n=document.getElementById('noProd');if(!p.length){t.innerHTML='';n.style.display='block';return}n.style.display='none';t.innerHTML=p.map(x=>`<tr><td>${x.n}</td><td>${x.p} ${DB.get('as').cur||CFG.cur}</td><td>${x.s||0}</td><td><button class="btn" style="padding:0.25rem 0.5rem;font-size:0.75rem" onclick="editP('${x.id}')">✏️</button> <button class="btn btn-red" style="padding:0.25rem 0.5rem;font-size:0.75rem" onclick="delP('${x.id}')">🗑️</button></td></tr>`).join('')};
+function openProd(){document.getElementById('pModal').classList.add('show');document.getElementById('mTitle').textContent='إضافة منتج';document.getElementById('pForm').reset();document.getElementById('pid').value=''};
+function closeProd(){document.getElementById('pModal').classList.remove('show')};
+function editP(id){let x=DB.get('ap').find(y=>y.id===id);if(!x)return;openProd();document.getElementById('mTitle').textContent='تعديل منتج';document.getElementById('pid').value=x.id;document.getElementById('pname').value=x.n;document.getElementById('pprice').value=x.p;document.getElementById('pstock').value=x.s||0;document.getElementById('pimg').value=x.i||'';document.getElementById('pdesc').value=x.d||'';document.getElementById('pact').checked=x.a!==false};
+function delP(id){if(confirm('حذف المنتج؟')){DB.set('ap',DB.get('ap').filter(x=>x.id!==id));loadP();dash()}};
+document.getElementById('pForm').onsubmit=e=>{e.preventDefault();let id=document.getElementById('pid').value,p=DB.get('ap'),d={id:id||Date.now().toString(),n:document.getElementById('pname').value,p:parseFloat(document.getElementById('pprice').value),s:parseInt(document.getElementById('pstock').value)||0,i:document.getElementById('pimg').value,d:document.getElementById('pdesc').value,a:document.getElementById('pact').checked};if(id){let i=p.findIndex(x=>x.id===id);p[i]=d}else{p.push(d)}DB.set('ap',p);closeProd();loadP();dash()};
+
+function loadO(){let o=DB.get('ao'),t=document.querySelector('#ordTable tbody'),n=document.getElementById('noOrd');if(!o.length){t.innerHTML='';n.style.display='block';return}n.style.display='none';const st={pending:'معلق',processing:'قيد التجهيز',completed:'مكتمل',cancelled:'ملغي'};t.innerHTML=o.slice().reverse().map(x=>`<tr><td>#${x.id}</td><td>${x.c||'عميل'}</td><td>${x.t||0} ${DB.get('as').cur||CFG.cur}</td><td class="${x.st==='completed'?'status-green':x.st==='pending'?'status-yellow':''}">${st[x.st]||'معلق'}</td></tr>`).join('')};
+
+function loadS(){let s=DB.get('as');document.getElementById('sName').value=s.name||CFG.name;document.getElementById('sCur').value=s.cur||CFG.cur};
+function saveSet(){DB.set('as',{name:document.getElementById('sName').value,cur:document.getElementById('sCur').value});alert('تم الحفظ!');dash()};
+function clearAll(){if(confirm('مسح الكل؟')){localStorage.removeItem('ap');localStorage.removeItem('ao');localStorage.removeItem('as');dash();alert('تم المسح')}};
+
+function init(){document.getElementById('date').textContent=new Date().toLocaleDateString('ar-SA');dash()}
+</script>
+</body>
+</html>
