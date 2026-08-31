@@ -1,0 +1,191 @@
+
+remon19941993-eng
+ريمون
+التنقل في المستودع
+شفرة
+مشاكل
+طلبات السحب
+الوكلاء
+الإجراءات
+المشاريع
+ويكي
+الأمن والجودة
+الالتزام fc4bf02
+remon19941993-eng
+remon19941993-eng
+مؤلف
+قبل 8 سنوات
+·
+·
+
+تم التحقق
+أضف بنية HTML الأولية للوحة التحكم الإدارية
+رئيسي
+أحد الوالدين
+4862ae4
+يقترف
+fc4bf02
+تم تغيير ملف واحد
+
++ 164
+عدد الأسطر المتغيرة: 164 إضافة و 0 حذف
+شجرة الملفات
+تصفية الملفات…
+ريمون
+البحث داخل الكود
+ 
+‎Remon‎
++ 164
+عدد الأسطر المتغيرة: 164 إضافة و 0 حذف
+رقم سطر الملف الأصلي	رقم السطر المختلف	تغيير خط التفاضل
+@@ -0,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم المتجر الحقيقية</title>
+    <!-- استدعاء مكتبة Supabase -->
+    <script src="https://jsdelivr.net"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f7f6; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h1, h2 { color: #2c3e50; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background-color: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; }
+        button:hover { background-color: #219653; }
+        .stats { display: flex; justify-content: space-around; margin-bottom: 30px; background: #eef2f3; padding: 15px; border-radius: 6px; }
+        .stat-item { text-align: center; }
+        .stat-item span { display: block; font-size: 24px; font-weight: bold; color: #2980b9; }
+        .product-list { margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+        .product-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; align-items: center; }
+        .delete-btn { background-color: #c0392b; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; width: auto; font-size: 12px; }
+        #login-box { max-width: 400px; margin: 100px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <!-- شاشة تسجيل الدخول -->
+    <div id="login-box">
+        <h1>تسجيل الدخول للأدمن</h1>
+        <div class="form-group">
+            <label>اسم المستخدم</label>
+            <input type="text" id="username">
+        </div>
+        <div class="form-group">
+            <label>كلمة المرور</label>
+            <input type="text" id="password">
+        </div>
+        <button onclick="login()">دخول</button>
+    </div>
+    <!-- لوحة التحكم الرئيسية -->
+    <div id="admin-panel" class="container" style="display: none;">
+        <h1>لوحة تحكم المتجر الحية 🌐</h1>
+        
+        <!-- الإحصائيات -->
+        <div class="stats">
+            <div class="stat-item">المنتجات الحية<span id="prod-count">0</span></div>
+            <div class="stat-item">إجمالي الطلبات<span id="order-count">0</span></div>
+        </div>
+        <!-- إضافة منتج جديد -->
+        <h2>إضافة منتج جديد للزوار</h2>
+        <div class="form-group">
+            <label>اسم المنتج</label>
+            <input type="text" id="p-name" placeholder="مثال: ساعة يد ذكية">
+        </div>
+        <div class="form-group">
+            <label>السعر (ريال)</label>
+            <input type="number" id="p-price" placeholder="مثال: 150">
+        </div>
+        <div class="form-group">
+            <label>رابط صورة المنتج</label>
+            <input type="text" id="p-image" placeholder="ضع رابط الصورة هنا">
+        </div>
+        <button onclick="addProduct()">نشر المنتج في المتجر فوراً</button>
+        <!-- قائمة المنتجات الحالية -->
+        <div class="product-list">
+            <h2>المنتجات المنشورة الآن لقاعدة البيانات</h2>
+            <div id="products-container">جاري تحميل المنتجات الحية...</div>
+        </div>
+    </div>
+    <script>
+        // إعداد الاتصال بـ Supabase
+        const SUPABASE_URL = "https://supabase.co";
+        const SUPABASE_KEY = "sb_publishable_aGRgE-1LEsPMX_SqNP_sHQ_IEWn9nSs";
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // تسجيل الدخول بالبيانات الثابتة الخاصة بك
+        function login() {
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            if(u === 'مؤسس' && p === 'admin123') {
+                document.getElementById('login-box').style.display = 'none';
+                document.getElementById('admin-panel').style.display = 'block';
+                loadData();
+            } else {
+                alert('البيانات خاطئة، يرجى إدخال اسم المستخدم وكلمة المرور الصحيحة');
+            }
+        }
+        // جلب البيانات الحية من السحاب للوحة التحكم
+        async function loadData() {
+            // 1. جلب المنتجات
+            let { data: products, error: pErr } = await _supabase.from('products').select('*');
+            // 2. جلب الطلبات
+            let { data: orders, error: oErr } = await _supabase.from('orders').select('*');
+            if (!pErr && products) {
+                document.getElementById('prod-count').innerText = products.length;
+                const container = document.getElementById('products-container');
+                container.innerHTML = '';
+                
+                if(products.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; color:#999;">لا توجد منتجات منشورة حتى الآن.</p>';
+                }
+                products.forEach(p => {
+                    container.innerHTML += `
+                        <div class="product-item">
+                            <div><strong>${p.name}</strong> - ${p.price} ريال</div>
+                            <button class="delete-btn" onclick="deleteProduct(${p.id})">حذف من المتجر</button>
+                        </div>
+                    `;
+                });
+            }
+            if(!oErr && orders) {
+                document.getElementById('order-count').innerText = orders.length;
+            }
+        }
+        // إضافة منتج جديد حقيقي إلى السحاب ليراه الزوار
+        async function addProduct() {
+            const name = document.getElementById('p-name').value;
+            const price = document.getElementById('p-price').value;
+            const image_url = document.getElementById('p-image').value;
+            if(!name || !price) {
+                alert('من فضلك املأ اسم المنتج وسعره أولاً');
+                return;
+            }
+            const { data, error } = await _supabase
+                .from('products')
+                .insert([{ name, price: parseFloat(price), image_url }]);
+            if(error) {
+                alert('حدث خطأ أثناء النشر: ' + error.message);
+            } else {
+                alert('تم نشر المنتج بنجاح وأصبح متاحاً للزوار الآن!');
+                document.getElementById('p-name').value = '';
+                document.getElementById('p-price').value = '';
+                document.getElementById('p-image').value = '';
+                loadData();
+            }
+        }
+        // حذف منتج نهائياً من قاعدة البيانات
+        async function deleteProduct(id) {
+            if(confirm('هل أنت متأكد من حذف هذا المنتج نهائياً من المتجر؟')) {
+                const { error } = await _supabase.from('products').delete().eq('id', id);
+                if(error) {
+                    alert('خطأ في الحذف: ' + error.message);
+                } else {
+                    loadData();
+                }
+            }
+        }
+    </script>
+</body>
+</html
